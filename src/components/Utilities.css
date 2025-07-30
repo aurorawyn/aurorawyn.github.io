@@ -1,0 +1,70 @@
+.background-aurora-image {
+    width: 100vw;
+    height: 100vh;
+    overflow: auto;
+    background-attachment: fixed;
+    background-position: 50% 30%;
+    background-size: cover;
+    background-image: url("../../public/images/Aurora.jpg");
+}
+
+.background-aurora-color {
+    width: 100vw;  /* 100% of viewport width */
+    height: 100vh; /* 100% of viewport height */
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--homepageBackgroundColorFaded);
+}
+
+.background-image {
+    width: 100vw;  /* 100% of viewport width */
+    height: 100vh; /* 100% of viewport height */
+    overflow: auto;
+    background-attachment: fixed;
+    background-position: center;
+    background-size: cover;
+}
+
+.background-color {
+    width: 100vw;  /* 100% of viewport width */
+    height: 100vh; /* 100% of viewport height */
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.textbox {
+    width: flex;
+    padding: 5px 20px 5px 20px;
+    margin: 20px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background-color: var(--textboxBackgroundColor);
+}
+
+.header-text {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 48px;
+    font-style: italic;
+    color: var(--textColor);
+}
+
+.body-text {
+    font-size: 20px;
+    color: var(--textColor);
+    line-height: 140%;
+}
+
+.link-text {
+    color: var(--textColor);
+}
+
+.link-text:hover {
+    color: var(--textColorHovered);
+}

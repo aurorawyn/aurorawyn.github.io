@@ -1,0 +1,14 @@
+.backbutton-button {
+    width: 100px;
+    height: 40px;
+    border-radius: 20px;
+    margin-top: 30px;
+    color: var(--textColor);
+    cursor: pointer;
+    background-color: var(--textboxBackgroundColor);
+    font-weight: bold;
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

@@ -1,0 +1,13 @@
+@import 'Colors.css';
+
+.animepage-bg-image {
+    background-image: url("../../public/images/Aurora.jpg");
+}
+
+.animepage-bg-color {
+    background-color: var(--homepageBackgroundColorFaded);
+}
+
+.animepage-text {
+    color: var(--textColor);
+}

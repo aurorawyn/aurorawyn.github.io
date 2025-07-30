@@ -1,0 +1,109 @@
+@import 'Colors.css';
+
+.homepage-bg-color-animation {
+    animation: bgColorFade 5s ease-in-out forwards;
+    animation-delay: 0s;
+}
+.homepage-bg-color {
+    background-color: var(--homepageBackgroundColor);
+}
+
+.homepage-titlecard-animation {
+    opacity: 0;
+    animation: elementFadeIn 2s ease-in-out forwards;
+    animation-delay: 3s;
+}
+.homepage-titlecard {
+    width: 650px;
+    padding-block: 30px;
+    margin-block: 40px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--textboxBackgroundColor);
+}
+
+.homepage-description-animation {
+    opacity: 0;
+    animation: elementFadeIn 2s ease-in-out forwards;
+    animation-delay: 4s;
+}
+.homepage-description {
+    width: 650px;
+    padding-block: 30px;
+    border-radius: 20px;
+    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--textboxBackgroundColor);
+}
+
+.homepage-image-animation {
+    animation: imageFadeIn 2s ease-in-out forwards;
+    animation-delay: 4.3s;
+    opacity: 0;
+}
+.homepage-image {
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+
+.homepage-link {
+    color: var(--textColor);
+}
+
+.homepage-link:hover {
+    color:var(--textColorHovered);
+}
+
+.homepage-music-symbol-animation {
+    animation: musicSymbolFadeIn 2s ease-in-out forwards;
+    animation-delay: 4.3s;
+    opacity: 0;
+}
+.homepage-music-symbol {
+    margin-top: -150px;
+    font-size: 86px;
+    color: var(--musicSymbol);
+    pointer-events: none;
+    user-select: none;
+}
+
+@keyframes bgColorFade {
+    0% {
+        background-color: var(--homepageBackgroundColor);
+    }
+    100% {
+        background-color: var(--homepageBackgroundColorFaded);
+    }
+}
+
+@keyframes elementFadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes imageFadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: .8;
+    }
+}
+
+@keyframes musicSymbolFadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: .4;
+    }
+}
