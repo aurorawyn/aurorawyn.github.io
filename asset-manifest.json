@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/static/css/main.76aa23df.css",
+    "main.js": "/static/js/main.c2755ba3.js",
+    "static/media/Aurora.jpg": "/static/media/Aurora.cd66c629a609be8c405e.jpg",
+    "index.html": "/index.html",
+    "main.76aa23df.css.map": "/static/css/main.76aa23df.css.map",
+    "main.c2755ba3.js.map": "/static/js/main.c2755ba3.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.76aa23df.css",
+    "static/js/main.c2755ba3.js"
+  ]
+}
