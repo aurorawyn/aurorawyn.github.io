@@ -46,6 +46,7 @@ function Homepage() {
         ['Music', '/music'],
         ['Miscellaneous Things', '/misc'],
         ["Socials n' stuff", '/socials'],
+        ["test :3", '/miku'],
     ];
     
     const navClick = () => sessionStorage.setItem("hasVisitedThisSession", "true");
