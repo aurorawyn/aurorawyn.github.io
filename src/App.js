@@ -7,6 +7,7 @@ import GamePage from './components/GamePage';
 import MiscPage from './components/MiscPage';
 import MusicPage from './components/MusicPage';
 import SocialPage from './components/SocialPage';
+import MikuPage from './components/MikuPage';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path = "/music" element={<MusicPage/>} />
           <Route path = "/misc" element={<MiscPage/>} />
           <Route path = "/socials" element={<SocialPage/>} />
+          <Route path = "/miku" element={<MikuPage/>} />
         </Routes>
       </Router>
     </div>
