@@ -65,7 +65,7 @@ function MikuPage() {
         playerRef.current?.requestPlay();
     }
     
-    return (<div>
+    return (<div style={{ fontSize: "32px" }}>
             <div>
                 {text}
             </div>
