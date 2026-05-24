@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from "react";
 import { Player } from "textalive-app-api";
 import React from "react";
 import "./MikuPage.css";
-import "./Utilities.css";
 
 function MikuPage() {
     const [text, setText] = useState("Miku!");
@@ -52,11 +51,16 @@ function MikuPage() {
                 player.volume = 5;
             },
             onTimeUpdate: (position) => {
-                const word = player.video?.findWord(position);
-                if(word && word != lastWord.current) {
-                    setLyrics(prev => prev + word);
+                // const word = player.video?.findWord(position);
+                // if(word && word != lastWord.current) {
+                //     setLyrics(prev => prev + word);
+                // }
+                // lastWord.current = word;
+                const curChar = player.video?.findChar(position);
+                if (curChar && curChar != lastWord.current) {
+                    setLyrics(prev => prev + curChar);
                 }
-                lastWord.current = word;
+                lastWord.current = curChar;
             },
         });
     }, []);
@@ -65,14 +69,15 @@ function MikuPage() {
         playerRef.current?.requestPlay();
     }
     
-    return (<div style={{ fontSize: "32px" }}>
+    return (
+        <div className="background">
             <div>
                 {text}
             </div>
             <div>
                 <button onClick={onPlayButtonClick}>Play</button>
             </div>
-            <div>
+            <div className="lyrics">
                 {lyrics}
             </div>
         </div>

@@ -1,0 +1,11 @@
+.background {
+    min-height: 100vh;
+    background-color:#ffffff;
+}
+
+.lyrics {
+    color: 	#ffbdc6;
+    font-size: 48px;
+    font-weight: bold;
+    /* -webkit-text-stroke: 1px black; // Outline */
+}
