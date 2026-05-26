@@ -8,6 +8,9 @@ function MikuPage() {
     const [lyrics, setLyrics] = useState("");
     const [loaded, setLoaded] = useState(false);
     const [curPosition, setCurPosition] = useState(0);
+
+    const charToIndex = useRef(new Map());
+    const metadata = useRef(new Map());
     const playerRef = useRef(null);
     const initializedRef = useRef(false);
     const lastWord = useRef("");
@@ -20,6 +23,17 @@ function MikuPage() {
             },
         });
         playerRef.current = player;
+
+        const animateWord = (now, unit) => {
+            if(unit.startTime <= now) {
+                const idx = charToIndex.current.get(unit);
+                const meta = metadata.current.get(idx);
+                if(!meta.loaded) {
+                    setLyrics(prev => prev + unit.text);
+                    meta.loaded = true;
+                }
+            }
+        }
 
         player.addListener({
             onAppReady: (app) => {
@@ -45,6 +59,17 @@ function MikuPage() {
             },
             onVideoReady: (v) => {
                 setText(prev => prev + " Song ["+player.data.song.name+"] Ready!");
+                let i = 0;
+                let w = player.video.firstChar;
+                while(w) {
+                    charToIndex.current.set(w, i);
+                    metadata.current.set(i, {
+                        loaded: false,
+                    });
+                    w.animate = animateWord;
+                    w = w.next;
+                    i++;
+                }
             },
             onTimerReady: (t) => {
                 setText(prev => prev + " Timer Ready!");
@@ -62,11 +87,11 @@ function MikuPage() {
 
                 // CURRENT WAY OF DOING THINGS SKIPS LYRICS!!! LOOK THROUGH ALL WORDS AND MAKE THE RENDER FUNCTION!!! Cause the Ku and Question mark are presumably at the exact same position!
 
-                const curChar = player.video?.findChar(position);
-                if (curChar && curChar != lastWord.current) {
-                    setLyrics(prev => prev + curChar);
-                }
-                lastWord.current = curChar;
+                // const curChar = player.video?.findChar(position);
+                // if (curChar && curChar != lastWord.current) {
+                //     setLyrics(prev => prev + curChar);
+                // }
+                // lastWord.current = curChar;
                 setCurPosition(position);
             },
         });
