@@ -4,31 +4,53 @@ import React from "react";
 import "./MikuPage.css";
 
 function MikuPage() {
-    const [text, setText] = useState("Miku!");
+    // Use useState for things that need to re-render on change and are NOT time sensitive relative to other things in the same frame
+    const [loadingText, setLoadingText] = useState("Miku!");
     const [lyrics, setLyrics] = useState("");
-    const [loaded, setLoaded] = useState(false);
+    const [songLoaded, setSongLoaded] = useState(false);
     const [curPosition, setCurPosition] = useState(0);
 
+    // Use useRef for anything that may have a race condition with something in the same frame
     const charToIndex = useRef(new Map());
-    const metadata = useRef(new Map());
+    const wordToIndex = useRef(new Map());
+    const phraseToIndex = useRef(new Map());
+    const charMetadata = useRef(new Map());
     const playerRef = useRef(null);
-    const initializedRef = useRef(false);
-    const lastWord = useRef("");
+    const curPhrase = useRef(-1);
+    const songInitializedRef = useRef(false);
+    const beatId = useRef(-1);
+    const lastBeatStart = useRef(-1);
 
     useEffect(() => {
-        if(playerRef.current) return; // prevent double initialization
+        if(playerRef.current) return; // prevent double initialization for player. This is all the app setup stuff
+
+        // Get player using my token
         const player = new Player({
             app: {
                 token: "uDkMf2dBIXUprPNR",
             },
         });
+        // set playerRef so that we know it's initialized now
         playerRef.current = player;
 
-        const animateWord = (now, unit) => {
+        // Animate function for char
+        const animateChar = (now, unit) => {
+            // Now is the current time, unit is the IChar that this refers to
             if(unit.startTime <= now) {
                 const idx = charToIndex.current.get(unit);
-                const meta = metadata.current.get(idx);
+                const meta = charMetadata.current.get(idx);
                 if(!meta.loaded) {
+                    // Load this character~!
+                    // In theory, this should be parent.parent
+                    const phrase = unit.parent?.parent;
+                    if (phrase) {
+                        const pIdx = phraseToIndex.current.get(phrase);
+                        // If in a new phrase, reset lyrics
+                        if(pIdx != curPhrase.current) {
+                            curPhrase.current = pIdx;
+                            setLyrics("");
+                        }
+                    }
                     setLyrics(prev => prev + unit.text);
                     meta.loaded = true;
                 }
@@ -38,7 +60,8 @@ function MikuPage() {
         player.addListener({
             onAppReady: (app) => {
                 if (!app.managed) {
-                    if(!initializedRef.current) { // Prevent loading song twice
+                    if(!songInitializedRef.current) { // Prevent loading song twice
+                        //Create song
                         player.createFromSongUrl("https://piapro.jp/t/CyPO/20250128183915", {
                             video: {
                                 // 音楽地図訂正履歴
@@ -52,51 +75,61 @@ function MikuPage() {
                                 lyricDiffId: 20659
                             },
                         });
-                        initializedRef.current = true;
+                        songInitializedRef.current = true;
                     }
                 }
-                setText(prev => prev + " App Ready!");
+                setLoadingText(prev => prev + " App Ready!");
             },
             onVideoReady: (v) => {
-                setText(prev => prev + " Song ["+player.data.song.name+"] Ready!");
+                setLoadingText(prev => prev + " Song ["+player.data.song.name+"] Ready!");
+                // Loop through all characters and set their indeces in the map, and set their animate function to what is above
                 let i = 0;
-                let w = player.video.firstChar;
-                while(w) {
-                    charToIndex.current.set(w, i);
-                    metadata.current.set(i, {
+                let c = player.video.firstChar;
+                while(c) {
+                    charToIndex.current.set(c, i);
+                    charMetadata.current.set(i, {
                         loaded: false,
                     });
-                    w.animate = animateWord;
+                    c.animate = animateChar;
+                    c = c.next;
+                    i++;
+                }
+
+                i = 0;
+                let w = player.video.firstWord;
+                while(w) {
+                    wordToIndex.current.set(w, i);
                     w = w.next;
                     i++;
                 }
+                i = 0;
+                let p = player.video.firstPhrase;
+                while(p) {
+                    phraseToIndex.current.set(p, i);
+                    p = p.next;
+                    i++;
+                }
+
             },
             onTimerReady: (t) => {
-                setText(prev => prev + " Timer Ready!");
-                setLoaded(true);
+                setLoadingText(prev => prev + " Timer Ready!");
+                setSongLoaded(true);
             },
             onPlay: () => {
                 player.volume = 5;
             },
             onTimeUpdate: (position) => {
-                // const word = player.video?.findWord(position);
-                // if(word && word != lastWord.current) {
-                //     setLyrics(prev => prev + word);
-                // }
-                // lastWord.current = word;
-
-                // CURRENT WAY OF DOING THINGS SKIPS LYRICS!!! LOOK THROUGH ALL WORDS AND MAKE THE RENDER FUNCTION!!! Cause the Ku and Question mark are presumably at the exact same position!
-
-                // const curChar = player.video?.findChar(position);
-                // if (curChar && curChar != lastWord.current) {
-                //     setLyrics(prev => prev + curChar);
-                // }
-                // lastWord.current = curChar;
+                const beat = player.findBeat(position);
+                if(lastBeatStart.current != beat.startTime) {
+                    lastBeatStart.current = beat.startTime;
+                    beatId.current = beatId.current + 1;
+                }
                 setCurPosition(position);
             },
         });
     }, []);
 
+    // Pause/play buttons
     const onPlayButtonClick = () => {
         playerRef.current?.requestPlay();
     }
@@ -106,12 +139,12 @@ function MikuPage() {
     
     return (
         <div className="background">
-            {!loaded && (           
+            {!songLoaded && (           
                 <div className="loadingText">
-                    {text}
+                    {loadingText}
                 </div>
             )}
-            {loaded && (
+            {songLoaded && (
                 <div>
                     <button onClick={onPlayButtonClick}>Play</button>
                     <button onClick={onPauseButtonClick}>Pause</button>
@@ -119,6 +152,9 @@ function MikuPage() {
             )}
             <div className="loadingText">
                 {curPosition}
+            </div>
+            <div className="loadingText">
+                {beatId.current}
             </div>
             <img className="starImage" src="/images/Star.png" alt="Star" style={{width: "300px", transform: `translate(-50%, -50%) rotate(${(-curPosition/8.0)%360}deg)`}}/>
             <div className="lyrics">
