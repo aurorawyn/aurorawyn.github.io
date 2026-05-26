@@ -1,6 +1,12 @@
 .background {
     min-height: 100vh;
-    background-color:#ffffff;
+    min-width: 100vw;
+    background: linear-gradient(to bottom, rgb(20, 0, 24), rgb(0, 0, 29))
+}
+
+.loadingText {
+    color: white;
+    font-size: 32px;
 }
 
 .lyrics {
@@ -8,4 +14,11 @@
     font-size: 48px;
     font-weight: bold;
     /* -webkit-text-stroke: 1px black; // Outline */
+}
+
+.starImage {
+    position: absolute;
+    left: 20%;
+    top: 50%;
+    /* transform: translate(-50%, -50%) scale(0.2) rotate(40deg); */
 }

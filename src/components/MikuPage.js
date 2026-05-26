@@ -6,6 +6,8 @@ import "./MikuPage.css";
 function MikuPage() {
     const [text, setText] = useState("Miku!");
     const [lyrics, setLyrics] = useState("");
+    const [loaded, setLoaded] = useState(false);
+    const [curPosition, setCurPosition] = useState(0);
     const playerRef = useRef(null);
     const initializedRef = useRef(false);
     const lastWord = useRef("");
@@ -46,6 +48,7 @@ function MikuPage() {
             },
             onTimerReady: (t) => {
                 setText(prev => prev + " Timer Ready!");
+                setLoaded(true);
             },
             onPlay: () => {
                 player.volume = 5;
@@ -56,11 +59,15 @@ function MikuPage() {
                 //     setLyrics(prev => prev + word);
                 // }
                 // lastWord.current = word;
+
+                // CURRENT WAY OF DOING THINGS SKIPS LYRICS!!! LOOK THROUGH ALL WORDS AND MAKE THE RENDER FUNCTION!!! Cause the Ku and Question mark are presumably at the exact same position!
+
                 const curChar = player.video?.findChar(position);
                 if (curChar && curChar != lastWord.current) {
                     setLyrics(prev => prev + curChar);
                 }
                 lastWord.current = curChar;
+                setCurPosition(position);
             },
         });
     }, []);
@@ -68,15 +75,27 @@ function MikuPage() {
     const onPlayButtonClick = () => {
         playerRef.current?.requestPlay();
     }
+    const onPauseButtonClick = () => {
+        playerRef.current?.requestPause();
+    }
     
     return (
         <div className="background">
-            <div>
-                {text}
+            {!loaded && (           
+                <div className="loadingText">
+                    {text}
+                </div>
+            )}
+            {loaded && (
+                <div>
+                    <button onClick={onPlayButtonClick}>Play</button>
+                    <button onClick={onPauseButtonClick}>Pause</button>
+                </div>
+            )}
+            <div className="loadingText">
+                {curPosition}
             </div>
-            <div>
-                <button onClick={onPlayButtonClick}>Play</button>
-            </div>
+            <img className="starImage" src="/images/Star.png" alt="Star" style={{width: "300px", transform: `translate(-50%, -50%) rotate(${(-curPosition/8.0)%360}deg)`}}/>
             <div className="lyrics">
                 {lyrics}
             </div>
