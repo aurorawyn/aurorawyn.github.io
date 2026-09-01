@@ -44,6 +44,7 @@ function MikuPage() {
     const [rightX, setRightX] = useState(100);
     const [topY, setTopY] = useState(0);
     const [bottomY, setBottomY] = useState(100);
+    const [curZ, setCurZ] = useState(0);
 
 
     function RandBetween(min, max) {
@@ -54,6 +55,7 @@ function MikuPage() {
         phraseId = 0;
         baseX = 0;
         baseY = 0;
+        baseZ = 0;
         size = 0;
         rotationOffset = 0;
         rotationParity = 0;
@@ -82,15 +84,16 @@ function MikuPage() {
             // (simulating FOV stuff)
             // WILL NEED TO HANDLE SUDDEN TRANSITION -> MAKE IT SMOOTH SOMEHOW
 
-            // let phraseDiff = this.phraseId - curPhraseId;
-            // let percentCorrection = ZCORRECTION * phraseDiff;
-            // if (percentCorrection < 0) percentCorrection = 0;
-            // if (percentCorrection > 1) percentCorrection = 1;
+            let zDiff = this.baseZ - curZ;
+            let percentCorrection = ZCORRECTION * phraseDiff;
+            if (percentCorrection < 0) percentCorrection = 0;
+            if (percentCorrection > 1) percentCorrection = 1;
 
             // // Move percentCorrection towards center
-            // let centerX = (leftX + rightX)/2.0;
-            // let centerY = (topY + bottomY)/2.0;
-
+            let centerX = (leftX + rightX)/2.0;
+            let centerY = (topY + bottomY)/2.0;
+            realX = realX + (centerX - realX) * percentCorrection;
+            realY = realY + (centerY - realY) * percentCorrection;
 
             return (
                 <div>
@@ -203,6 +206,7 @@ function MikuPage() {
                     lyricStar.baseY = curY;
                     lyricStar.phrase = p;
                     lyricStar.phraseId = i;
+                    lyricStar.baseZ = i;
                     lyricStar.rotationOffset = RandBetween(0, 360);
                     lyricStar.rotation = lyricStar.rotationOffset;
                     if (RandBetween(0, 1) < 0.5) {
