@@ -15,11 +15,23 @@ function MikuPage() {
     const wordToIndex = useRef(new Map());
     const phraseToIndex = useRef(new Map());
     const charMetadata = useRef(new Map());
+    const phraseToLyricStar = useRef(new Map());
     const playerRef = useRef(null);
     const curPhrase = useRef(-1);
     const songInitializedRef = useRef(false);
     const beatId = useRef(-1);
     const lastBeatStart = useRef(-1);
+
+    class LyricStar {
+        baseX = 0;
+        baseY = 0;
+        size = 0;
+        phrase = null;
+        chars = [];
+        animate() {
+
+        }
+    }
 
     useEffect(() => {
         if(playerRef.current) return; // prevent double initialization for player. This is all the app setup stuff
@@ -57,6 +69,11 @@ function MikuPage() {
             }
         }
 
+        const animatePhrase = (now, unit) => {
+            // Now is current time, Unit is the IPhrase.
+
+        }
+
         player.addListener({
             onAppReady: (app) => {
                 if (!app.managed) {
@@ -90,7 +107,7 @@ function MikuPage() {
                     charMetadata.current.set(i, {
                         loaded: false,
                     });
-                    c.animate = animateChar;
+                    // c.animate = animateChar;
                     c = c.next;
                     i++;
                 }
@@ -106,6 +123,17 @@ function MikuPage() {
                 let p = player.video.firstPhrase;
                 while(p) {
                     phraseToIndex.current.set(p, i);
+                    // Make the lyricStar object
+                    let lyricStar = new LyricStar();
+                    lyricStar.phrase = p;
+                    let pc = phrase.firstChar;
+                    while(pc) {
+                        lyricStar.chars.push(pc);
+                        pc = pc.next;
+                    }
+                    p.animate = animatePhrase;
+
+                    phraseToLyricStar.current.set(p, lyricStar);
                     p = p.next;
                     i++;
                 }
