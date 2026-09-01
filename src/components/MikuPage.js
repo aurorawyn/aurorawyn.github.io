@@ -9,6 +9,7 @@ function MikuPage() {
     const [lyrics, setLyrics] = useState("");
     const [songLoaded, setSongLoaded] = useState(false);
     const [curPosition, setCurPosition] = useState(0);
+    const [forceRender, setForceRender] = useState(0);
 
     // Use useRef for anything that may have a race condition with something in the same frame
     const charToIndex = useRef(new Map());
@@ -16,20 +17,55 @@ function MikuPage() {
     const phraseToIndex = useRef(new Map());
     const charMetadata = useRef(new Map());
     const phraseToLyricStar = useRef(new Map());
+    const lyricStarList = useRef([]);
     const playerRef = useRef(null);
     const curPhrase = useRef(-1);
     const songInitializedRef = useRef(false);
     const beatId = useRef(-1);
     const lastBeatStart = useRef(-1);
 
+    // Values for rendering lyricStars
+    const [curPhraseId, setCurPhraseId] = useState(0);
+    const [leftX, setLeftX] = useState(0);
+    const [rightX, setRightX] = useState(100);
+    const [topY, setTopY] = useState(0);
+    const [bottomY, setBottomY] = useState(100);
+
+
+    function RandBetween(min, max) {
+        return Math.random() * (max-min) + min;
+    }
+
     class LyricStar {
+        phraseId = 0;
         baseX = 0;
         baseY = 0;
         size = 0;
+        rotation = 0;
         phrase = null;
         chars = [];
         animate() {
+            if (this.phraseId == curPhraseId) {
+                setForceRender(prev => prev + 1);
+            }
+        }
 
+        render() {
+            let realX = this.baseX - leftX;
+            let realY = this.baseY - topY;
+            // if(realX <= 0 || realX >= 100 || realY <= 0 || realY >= 100) {
+            //     return <div />
+            // }
+
+            // X from 0 to 100 is more like 0 to 40 in the real thing, so multiply X by 0.4
+            realX = realX * 0.4;
+
+            return (
+                <div>
+                    <div> Test! {this.baseX} {this.baseY} {realX} {realY} </div>
+                    <img src="/images/Star.png" alt="Star" style={{position: "absolute", left: `${realX}%`, top: `${realY}%`, width: "30px", transform: `translate(-50%, -50%) rotate(${(this.rotation)%360}deg)`}}/>
+                </div>
+            )
         }
     }
 
@@ -107,7 +143,7 @@ function MikuPage() {
                     charMetadata.current.set(i, {
                         loaded: false,
                     });
-                    // c.animate = animateChar;
+                    c.animate = animateChar;
                     c = c.next;
                     i++;
                 }
@@ -120,20 +156,41 @@ function MikuPage() {
                     i++;
                 }
                 i = 0;
+
                 let p = player.video.firstPhrase;
+                let curX = 50.0 + RandBetween(-10, 10);
+                let curY = 50.0 + RandBetween(-10, 10);
                 while(p) {
                     phraseToIndex.current.set(p, i);
                     // Make the lyricStar object
                     let lyricStar = new LyricStar();
+                    
+                    // Set it's X/Y values and phrase/char values
+                    lyricStar.baseX = curX;
+                    lyricStar.baseY = curY;
                     lyricStar.phrase = p;
-                    let pc = phrase.firstChar;
+                    lyricStar.phraseId = i;
+                    lyricStar.rotation = RandBetween(0, 360);
+                    let pc = p.firstChar;
                     while(pc) {
                         lyricStar.chars.push(pc);
                         pc = pc.next;
                     }
                     p.animate = animatePhrase;
-
                     phraseToLyricStar.current.set(p, lyricStar);
+                    lyricStarList.current.push(lyricStar);
+                    
+                    // dumb while loop but shouldn't run for too long lmao
+                    let nextX = RandBetween(5, 95);
+                    let nextY = RandBetween(5, 95);
+                    // Don't want it to be near center so retry if matches this
+                    while((nextY >= 40 && nextY <= 60 && nextX >= 40)) {
+                        nextX = RandBetween(5, 95);
+                        nextY = RandBetween(5, 95);
+                    }
+                    
+                    curX = curX + (nextX - 50);
+                    curY = curY + (nextY - 50);
                     p = p.next;
                     i++;
                 }
@@ -188,6 +245,7 @@ function MikuPage() {
             <div className="lyrics">
                 {lyrics}
             </div>
+            {lyricStarList.current.map((star, index) => star.render())}
         </div>
     );
 }
