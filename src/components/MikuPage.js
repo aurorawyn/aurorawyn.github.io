@@ -4,6 +4,20 @@ import React from "react";
 import "./MikuPage.css";
 
 function MikuPage() {
+    // Static values for changing animation things
+    const X_CORRECTION = .40; // How much of the left side of the screen to use. This is 40%
+    const INIT_OFFSET = 10;
+    const ZCORRECTION = 0.05;
+    const STAR_ROTATION_SPEED_INVERSE = 8.0;
+
+    // Enum/state values
+    const STATE_NO_RENDER = 1; // Don't render. Either too far away in song or completely done
+    const STATE_BACKGROUND = 2; // Just rotating in background
+    const STATE_ZOOMING_TO = 3; // zooming the camera towards this thing
+    const STATE_MAIN_STAGE = 4; // rendering lyrics at main stage
+    const STATE_LEAVING = 5; // drifting off the screen
+
+
     // Use useState for things that need to re-render on change and are NOT time sensitive relative to other things in the same frame
     const [loadingText, setLoadingText] = useState("Miku!");
     const [lyrics, setLyrics] = useState("");
@@ -41,13 +55,17 @@ function MikuPage() {
         baseX = 0;
         baseY = 0;
         size = 0;
+        rotationOffset = 0;
+        rotationParity = 0;
         rotation = 0;
         phrase = null;
         chars = [];
-        animate() {
+        animate(curTime) {
+            // Set the needed variables here for stuff like state machine, etc..
             if (this.phraseId == curPhraseId) {
                 setForceRender(prev => prev + 1);
             }
+            this.rotation = this.rotationOffset + (this.rotationParity * curTime/STAR_ROTATION_SPEED_INVERSE);
         }
 
         render() {
@@ -58,11 +76,25 @@ function MikuPage() {
             // }
 
             // X from 0 to 100 is more like 0 to 40 in the real thing, so multiply X by 0.4
-            realX = realX * 0.4;
+            realX = realX * X_CORRECTION;
+
+            // Based on how far away we are from the current phrase (phraseId - curPhraseId, send the coordinates a bit more towards center (leftX+rightX)/2). Linear or slow exponential? 
+            // (simulating FOV stuff)
+            // WILL NEED TO HANDLE SUDDEN TRANSITION -> MAKE IT SMOOTH SOMEHOW
+
+            // let phraseDiff = this.phraseId - curPhraseId;
+            // let percentCorrection = ZCORRECTION * phraseDiff;
+            // if (percentCorrection < 0) percentCorrection = 0;
+            // if (percentCorrection > 1) percentCorrection = 1;
+
+            // // Move percentCorrection towards center
+            // let centerX = (leftX + rightX)/2.0;
+            // let centerY = (topY + bottomY)/2.0;
+
 
             return (
                 <div>
-                    <div> Test! {this.baseX} {this.baseY} {realX} {realY} </div>
+                    {/* <div> Test! {this.baseX} {this.baseY} {realX} {realY} </div> */}
                     <img src="/images/Star.png" alt="Star" style={{position: "absolute", left: `${realX}%`, top: `${realY}%`, width: "30px", transform: `translate(-50%, -50%) rotate(${(this.rotation)%360}deg)`}}/>
                 </div>
             )
@@ -107,7 +139,8 @@ function MikuPage() {
 
         const animatePhrase = (now, unit) => {
             // Now is current time, Unit is the IPhrase.
-
+            let lyricStar = phraseToLyricStar.current.get(unit);
+            lyricStar.animate(now);
         }
 
         player.addListener({
@@ -158,8 +191,8 @@ function MikuPage() {
                 i = 0;
 
                 let p = player.video.firstPhrase;
-                let curX = 50.0 + RandBetween(-10, 10);
-                let curY = 50.0 + RandBetween(-10, 10);
+                let curX = 50.0 + RandBetween(-INIT_OFFSET, INIT_OFFSET);
+                let curY = 50.0 + RandBetween(-INIT_OFFSET, INIT_OFFSET);
                 while(p) {
                     phraseToIndex.current.set(p, i);
                     // Make the lyricStar object
@@ -170,7 +203,14 @@ function MikuPage() {
                     lyricStar.baseY = curY;
                     lyricStar.phrase = p;
                     lyricStar.phraseId = i;
-                    lyricStar.rotation = RandBetween(0, 360);
+                    lyricStar.rotationOffset = RandBetween(0, 360);
+                    lyricStar.rotation = lyricStar.rotationOffset;
+                    if (RandBetween(0, 1) < 0.5) {
+                        lyricStar.rotationParity = 1;
+                    }
+                    else {
+                        lyricStar.rotationParity = -1;
+                    }
                     let pc = p.firstChar;
                     while(pc) {
                         lyricStar.chars.push(pc);
@@ -241,7 +281,7 @@ function MikuPage() {
             <div className="loadingText">
                 {beatId.current}
             </div>
-            <img className="starImage" src="/images/Star.png" alt="Star" style={{width: "300px", transform: `translate(-50%, -50%) rotate(${(-curPosition/8.0)%360}deg)`}}/>
+            {/* <img className="starImage" src="/images/Star.png" alt="Star" style={{width: "300px", transform: `translate(-50%, -50%) rotate(${(-curPosition/8.0)%360}deg)`}}/> */}
             <div className="lyrics">
                 {lyrics}
             </div>
