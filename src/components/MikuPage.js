@@ -43,6 +43,7 @@ function MikuPage() {
     // Values for rendering lyricStars
     const curPhraseId = useRef(0);
 
+    const isPaused = useRef(true);
     const leftX = useRef(0);
     const rightX = useRef(100);
     const topY = useRef(0);
@@ -98,11 +99,31 @@ function MikuPage() {
                 this.updateZoom(now);
             }
             else if(this.state == STATE_LEAVING) {
-            
+                if(this.baseZ < curZ.current - 2) this.state = STATE_NO_RENDER;
             }
             
             this.rotation = this.rotationOffset + (this.rotationParity * now/STAR_ROTATION_SPEED_INVERSE);
             this.lastTime = now;
+        }
+
+        
+        animate(curTime) {
+            if(this.state == STATE_NO_RENDER) {
+            }
+            else if(this.state == STATE_BACKGROUND) {
+            }
+            else if(this.state == STATE_MAIN_STAGE) {
+                // Check for when to move to LEAVING & increment curPhraseId
+                if(this.chars[this.chars.length-1].endTime < curTime) {
+                    curPhraseId.current = curPhraseId.current + 1;
+                    this.state = STATE_LEAVING;
+                }
+            }
+            else if(this.state == STATE_ZOOMING_TO) {
+            }
+            else if(this.state == STATE_LEAVING) {
+            }
+            // Check lyrics
         }
 
         startZoom() {
@@ -153,26 +174,8 @@ function MikuPage() {
             }
         }
 
-        animate(curTime) {
-            if(this.state == STATE_NO_RENDER) {
-            }
-            else if(this.state == STATE_BACKGROUND) {
-            }
-            else if(this.state == STATE_MAIN_STAGE) {
-                // Check for when to move to LEAVING & increment curPhraseId
-                if(this.chars[this.chars.length-1].endTime < curTime) {
-                    curPhraseId.current = curPhraseId.current + 1;
-                    this.state = STATE_LEAVING;
-                }
-            }
-            else if(this.state == STATE_ZOOMING_TO) {
-            }
-            else if(this.state == STATE_LEAVING) {
-            }
-            // Check lyrics
-        }
-
         render() {
+            if(this.state == STATE_NO_RENDER) return <div />;
             let realX = this.baseX - leftX.current;
             let realY = this.baseY - topY.current;
 
@@ -181,24 +184,23 @@ function MikuPage() {
             // WILL NEED TO HANDLE SUDDEN TRANSITION -> MAKE IT SMOOTH SOMEHOW
 
             let zDiff = this.baseZ - curZ.current;
-            let percentCorrection = ZCORRECTION * zDiff;
-            if (percentCorrection < -1) percentCorrection = -1;
-            if (percentCorrection > 1) percentCorrection = 1;
+            let percentCorrection = Math.min(ZCORRECTION * zDiff, 1);
+            if(zDiff < 0) {
+                percentCorrection = -3.0 * (zDiff * zDiff);
+            }
 
-            // // Move percentCorrection towards center
-            let centerX = (leftX.current + rightX.current)/2.0;
-            let centerY = (topY.current + bottomY.current)/2.0;
-            realX = realX + (centerX - realX) * percentCorrection;
-            realY = realY + (centerY - realY) * percentCorrection;
+            // // Move percentCorrection towards center (50, 50)
+            realX = realX + (50 - realX) * percentCorrection;
+            realY = realY + (50 - realY) * percentCorrection;
 
             // Now change size based off of zDiff
             // If zDiff < -1, should be 0. This star has already moved 'behind' camera
             // if zDiff > 3, should be 0. Only wanna show first 3 stars??
             let sizeMult = 0;
             if (zDiff < 0) {
-                sizeMult = -2.0 * zDiff + 1;
+                sizeMult = -3.0 * zDiff + 1;
             } else {
-                sizeMult = (1.0/(10*zDiff + 1));
+                sizeMult = (1.0/(3*zDiff + 1));
             }
             
             // If too far away/not supposed to be visible, return nothing
@@ -308,10 +310,8 @@ function MikuPage() {
                 i = 0;
 
                 let p = player.video.firstPhrase;
-                let curX = (50.0 - X_OFFSET_FROM_CENTER) + RandBetween(-INIT_OFFSET, INIT_OFFSET);
-                let curY = 50.0 + RandBetween(-INIT_OFFSET, INIT_OFFSET);
-                let curCenterX = 50;
-                let curCenterY = 50;
+                let curX = (50.0 - X_OFFSET_FROM_CENTER);
+                let curY = 50.0;
 
                 while(p) {
                     phraseToIndex.current.set(p, i);
@@ -352,18 +352,14 @@ function MikuPage() {
                     let nextX = RandBetween(5, 95);
                     let nextY = RandBetween(5, 95);
                     // Don't want it to be near center so retry if matches this
-                    while((nextY >= 40 && nextY <= 60 && nextX >= 40)) {
+                    while((nextY >= 40 && nextY <= 60 && nextX >= 20)) {
                         nextX = RandBetween(5, 95);
                         nextY = RandBetween(5, 95);
                     }
                     
-                    // Next star will be the current center of screen's coords + the random offset from -50 to 50
-                    curX = curCenterX + (nextX - 50);
-                    curY = curCenterY + (nextY - 50);
-
-                    // Next center will be +25 in x from where the star is, and keep same Y
-                    curCenterX = curX - X_OFFSET_FROM_CENTER;
-                    curCenterY = curY;
+                    // nextX/nextY is relative to screen, we now translate to based on previous star location (curX/curY)
+                    curX = curX + nextX - X_OFFSET_FROM_CENTER;
+                    curY = curY + nextY - 50;
 
                     p = p.next;
                     i++;
@@ -391,9 +387,11 @@ function MikuPage() {
     // Pause/play buttons
     const onPlayButtonClick = () => {
         playerRef.current?.requestPlay();
+        isPaused.current = false;
     }
     const onPauseButtonClick = () => {
         playerRef.current?.requestPause();
+        isPaused.current = true;
     }
 
     // Animation requests
