@@ -110,23 +110,20 @@ function MikuPage() {
 
             let t = Math.min(elapsed / ZOOM_TIME, 1.0);
 
-            // Smoothstep
-            let eased = t * t * (3.0 - 2.0 * t);
-
             leftX.current =
-                this.startLeftX + this.xDist * eased;
+                this.startLeftX + this.xDist * t;
 
             rightX.current =
-                this.startRightX + this.xDist * eased;
+                this.startRightX + this.xDist * t;
 
             topY.current =
-                this.startTopY + this.yDist * eased;
+                this.startTopY + this.yDist * t;
 
             bottomY.current =
-                this.startBottomY + this.yDist * eased;
+                this.startBottomY + this.yDist * t;
 
             curZ.current =
-                this.startZ + this.zDist * eased;
+                this.startZ + this.zDist * t;
 
             if (t >= 1.0) {
                 this.state = STATE_MAIN_STAGE;
@@ -144,7 +141,6 @@ function MikuPage() {
                 }
             }
             else if(this.state == STATE_MAIN_STAGE) {
-                // setDebug("HI! :"+this.phraseId + " | " + this.chars[this.chars.length-1].endTime+" | "+leftX+" "+topY);
                 // Check for when to move to LEAVING & increment curPhraseId
                 if(this.chars[this.chars.length-1].endTime < curTime) {
                     curPhraseId.current = curPhraseId.current + 1;
@@ -152,25 +148,6 @@ function MikuPage() {
                 }
             }
             else if(this.state == STATE_ZOOMING_TO) {
-                // Check for when we're done and in MAIN_STAGE
-                let dt = (curTime-this.lastTime)/1000.0; // dt is in SECONDS now
-
-                this.totalZoom += dt;
-
-                // Clamp from 0 to 1
-                let t = Math.min(this.totalZoom / ZOOM_TIME, 1.0);
-
-                let eased = t * t * (3.0 - 2.0 * t);
-                
-                leftX.current = this.startLeftX + this.xDist * eased;
-                rightX.current = this.startRightX + this.xDist * eased;
-                bottomY.current = this.startBottomY + this.yDist * eased;
-                topY.current = this.startTopY + this.yDist * eased;
-                curZ.current = this.startZ + this.zDist * eased;
-
-                if(t >= 1.0) {
-                    this.state = STATE_MAIN_STAGE;
-                }
             }
             else if(this.state == STATE_LEAVING) {
             
@@ -411,10 +388,9 @@ function MikuPage() {
 
         const renderLoop = () => {
             if (!running) return;
-
             // Update all active animations
-            for (let ind = 0; ind < lyricStarList.length; ind++) {
-                let star = lyricStarList[ind];
+            for (let ind = 0; ind < lyricStarList.current.length; ind++) {
+                let star = lyricStarList.current[ind];
                 star.updateZoom(performance.now());
             }
 
