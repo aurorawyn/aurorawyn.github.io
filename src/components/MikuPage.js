@@ -39,7 +39,8 @@ function MikuPage() {
     const lastBeatStart = useRef(-1);
 
     // Values for rendering lyricStars
-    const [curPhraseId, setCurPhraseId] = useState(0);
+    const curPhraseId = useRef(0);
+
     const [leftX, setLeftX] = useState(0);
     const [rightX, setRightX] = useState(100);
     const [topY, setTopY] = useState(0);
@@ -64,7 +65,7 @@ function MikuPage() {
         chars = [];
         animate(curTime) {
             // Set the needed variables here for stuff like state machine, etc..
-            if (this.phraseId == curPhraseId) {
+            if (this.phraseId == curPhraseId.current) {
                 setForceRender(prev => prev + 1);
             }
             this.rotation = this.rotationOffset + (this.rotationParity * curTime/STAR_ROTATION_SPEED_INVERSE);
