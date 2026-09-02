@@ -83,7 +83,25 @@ function MikuPage() {
         zoomStartTime = 0;
 
         update(now) {
-            this.updateZoom(now);
+            if(this.state == STATE_NO_RENDER) {
+
+            }
+            else if(this.state == STATE_BACKGROUND) {
+                if(this.phraseId == curPhraseId.current) {
+                    this.startZoom();
+                }
+            }
+            else if(this.state == STATE_MAIN_STAGE) {
+
+            }
+            else if(this.state == STATE_ZOOMING_TO) {
+                this.updateZoom(now);
+            }
+            else if(this.state == STATE_LEAVING) {
+            
+            }
+            
+            this.rotation = this.rotationOffset + (this.rotationParity * now/STAR_ROTATION_SPEED_INVERSE);
             this.lastTime = now;
         }
 
@@ -137,13 +155,8 @@ function MikuPage() {
 
         animate(curTime) {
             if(this.state == STATE_NO_RENDER) {
-                // Don't do anything
             }
             else if(this.state == STATE_BACKGROUND) {
-                // Check for if we are the zooming to one
-                if(this.phraseId == curPhraseId.current) {
-                    this.startZoom();
-                }
             }
             else if(this.state == STATE_MAIN_STAGE) {
                 // Check for when to move to LEAVING & increment curPhraseId
@@ -155,12 +168,8 @@ function MikuPage() {
             else if(this.state == STATE_ZOOMING_TO) {
             }
             else if(this.state == STATE_LEAVING) {
-            
             }
             // Check lyrics
-
-            this.rotation = this.rotationOffset + (this.rotationParity * curTime/STAR_ROTATION_SPEED_INVERSE);
-            this.lastTime = curTime;
         }
 
         render() {
