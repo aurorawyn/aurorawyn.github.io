@@ -82,6 +82,11 @@ function MikuPage() {
         totalZoom = 0;
         zoomStartTime = 0;
 
+        update(now) {
+            this.updateZoom(now);
+            this.lastTime = now;
+        }
+
         startZoom() {
             this.state = STATE_ZOOMING_TO;
 
@@ -391,7 +396,7 @@ function MikuPage() {
             // Update all active animations
             for (let ind = 0; ind < lyricStarList.current.length; ind++) {
                 let star = lyricStarList.current[ind];
-                star.updateZoom(performance.now());
+                star.update(performance.now());
             }
 
             setForceRender(prev => prev + 1);
