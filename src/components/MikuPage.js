@@ -26,7 +26,6 @@ function MikuPage() {
     const [debug, setDebug] = useState("");
     const [songLoaded, setSongLoaded] = useState(false);
     const [curPosition, setCurPosition] = useState(0);
-    const [forceRender, setForceRender] = useState(0);
 
     // Use useRef for anything that may have a race condition with something in the same frame
     const charToIndex = useRef(new Map());
@@ -49,7 +48,8 @@ function MikuPage() {
     const topY = useRef(0);
     const bottomY = useRef(100);
     const curZ = useRef(0);
-
+    const animationFrameRef = useRef(null);
+    const [forceRender, setForceRender] = useState(0);
 
     function RandBetween(min, max) {
         return Math.random() * (max-min) + min;
@@ -72,30 +72,75 @@ function MikuPage() {
         xDist = 0;
         yDist = 0;
         zDist = 0;
-        totalZoom = 0;
 
-        animate(curTime) {
-            // Make the one we're currently on responsible for re-render
-            if (this.phraseId == curPhraseId.current) {
-                setForceRender(prev => prev + 1);
+        startLeftX = 0;
+        startRightX = 100;
+        startTopY = 0;
+        startBottomY = 100;
+        startZ = 0;
+
+        totalZoom = 0;
+        zoomStartTime = 0;
+
+        startZoom() {
+            this.state = STATE_ZOOMING_TO;
+
+            this.startLeftX = leftX.current;
+            this.startRightX = rightX.current;
+            this.startTopY = topY.current;
+            this.startBottomY = bottomY.current;
+            this.startZ = curZ.current;
+
+            let centerX = (leftX.current + rightX.current) / 2.0;
+            let centerY = (topY.current + bottomY.current) / 2.0;
+
+            this.xDist = (this.baseX + X_OFFSET_FROM_CENTER) - centerX;
+            this.yDist = this.baseY - centerY;
+            this.zDist = this.baseZ - curZ.current;
+
+            this.zoomStartTime = performance.now();
+        }
+
+        updateZoom(now) {
+            if (this.state !== STATE_ZOOMING_TO) {
+                return;
             }
 
+            let elapsed = (now - this.zoomStartTime) / 1000.0;
+
+            let t = Math.min(elapsed / ZOOM_TIME, 1.0);
+
+            // Smoothstep
+            let eased = t * t * (3.0 - 2.0 * t);
+
+            leftX.current =
+                this.startLeftX + this.xDist * eased;
+
+            rightX.current =
+                this.startRightX + this.xDist * eased;
+
+            topY.current =
+                this.startTopY + this.yDist * eased;
+
+            bottomY.current =
+                this.startBottomY + this.yDist * eased;
+
+            curZ.current =
+                this.startZ + this.zDist * eased;
+
+            if (t >= 1.0) {
+                this.state = STATE_MAIN_STAGE;
+            }
+        }
+
+        animate(curTime) {
             if(this.state == STATE_NO_RENDER) {
                 // Don't do anything
             }
             else if(this.state == STATE_BACKGROUND) {
                 // Check for if we are the zooming to one
                 if(this.phraseId == curPhraseId.current) {
-                    // Change to ZOOMING_TO !!!
-                    this.state = STATE_ZOOMING_TO;
-
-                    // Calculate how much we need to move center X total
-                    let centerX = (leftX.current + rightX.current)/2.0;
-                    let centerY = (topY.current + bottomY.current)/2.0;
-
-                    this.xDist = (this.baseX + X_OFFSET_FROM_CENTER) - centerX;
-                    this.yDist = this.baseY - centerY;
-                    this.zDist = this.baseZ - curZ.current;
+                    this.startZoom();
                 }
             }
             else if(this.state == STATE_MAIN_STAGE) {
@@ -109,18 +154,21 @@ function MikuPage() {
             else if(this.state == STATE_ZOOMING_TO) {
                 // Check for when we're done and in MAIN_STAGE
                 let dt = (curTime-this.lastTime)/1000.0; // dt is in SECONDS now
-                this.totalZoom = this.totalZoom + dt;
-                let deltaX = this.xDist * (dt / ZOOM_TIME);
-                let deltaY = this.yDist * (dt / ZOOM_TIME);
-                let deltaZ = this.zDist * (dt / ZOOM_TIME);
-                setDebug(this.phraseId+" Zoom!: "+this.xDist+" "+this.yDist+" "+this.zDist+"  DeltaX: "+deltaX+" "+leftX.current);
-                leftX.current += deltaX;
-                rightX.current += deltaX;
-                bottomY.current += deltaY;
-                topY.current += deltaY;
-                curZ.current += deltaZ;
 
-                if(this.totalZoom >= ZOOM_TIME) {
+                this.totalZoom += dt;
+
+                // Clamp from 0 to 1
+                let t = Math.min(this.totalZoom / ZOOM_TIME, 1.0);
+
+                let eased = t * t * (3.0 - 2.0 * t);
+                
+                leftX.current = this.startLeftX + this.xDist * eased;
+                rightX.current = this.startRightX + this.xDist * eased;
+                bottomY.current = this.startBottomY + this.yDist * eased;
+                topY.current = this.startTopY + this.yDist * eased;
+                curZ.current = this.startZ + this.zDist * eased;
+
+                if(t >= 1.0) {
                     this.state = STATE_MAIN_STAGE;
                 }
             }
@@ -356,6 +404,37 @@ function MikuPage() {
     const onPauseButtonClick = () => {
         playerRef.current?.requestPause();
     }
+
+    // Animation requests
+    useEffect(() => {
+        let running = true;
+
+        const renderLoop = () => {
+            if (!running) return;
+
+            // Update all active animations
+            for (let ind = 0; ind < lyricStarList.length; ind++) {
+                let star = lyricStarList[ind];
+                star.updateZoom(performance.now());
+            }
+
+            setForceRender(prev => prev + 1);
+
+            animationFrameRef.current =
+                requestAnimationFrame(renderLoop);
+        };
+
+        animationFrameRef.current =
+            requestAnimationFrame(renderLoop);
+
+        return () => {
+            running = false;
+
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
+    }, []);
     
     return (
         <div className="background">
