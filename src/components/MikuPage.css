@@ -22,3 +22,11 @@
     top: 50%;
     /* transform: translate(-50%, -50%) scale(0.2) rotate(40deg); */
 }
+
+.lyricStarText {
+    color: #ffbdc6;
+    font-size: 108px;
+    font-weight: bold;
+    white-space: nowrap;
+    pointer-events: none;
+}

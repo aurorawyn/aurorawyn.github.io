@@ -67,6 +67,7 @@ function MikuPage() {
         rotation = 0;
         phrase = null;
         chars = [];
+        currentTime = 0;
         state = STATE_NO_RENDER;
 
         lastTime = 0;
@@ -108,6 +109,8 @@ function MikuPage() {
 
         
         animate(curTime) {
+            this.currentTime = curTime;
+
             if(this.state == STATE_NO_RENDER) {
             }
             else if(this.state == STATE_BACKGROUND) {
@@ -215,6 +218,22 @@ function MikuPage() {
                 <div>
                     {/* <div> Test! {this.baseX} {this.baseY} {realX} {realY} </div> */}
                     <img src="/images/Star.png" alt="Star" style={{position: "absolute", left: `${realX}%`, top: `${realY}%`, width: `${this.size}px`, transform: `translate(-50%, -50%) rotate(${(this.rotation)%360}deg)`}}/>
+                    <span
+                        className="lyricStarText"
+                        style={{
+                            position: "absolute",
+                            left: `${realX}%`,
+                            top: `${realY}%`,
+                            transform: `translate(${this.size / 2 + 36}px, -50%) scale(${sizeMult})`,
+                            transformOrigin: "left center",
+                        }}
+                    >
+                        {this.chars.map((char, index) =>
+                            char.startTime <= this.currentTime ? (
+                                <span key={index}>{char.text}</span>
+                            ) : null
+                        )}
+                    </span>
                 </div>
             )
         }
